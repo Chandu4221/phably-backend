@@ -1,0 +1,3542 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Phably DOCUMENTATION",
+      "description": "Phably documentation version 1.0",
+      "version": "1.0",
+      "contact": {
+        "name": "API Support",
+        "email": "support@phably.com"
+      }
+    },
+    "servers": [
+      {
+        "url": "https://api.phably.com/",
+        "description": "production server"
+      },
+      {
+        "url": "http://localhost:8081",
+        "description": "development server"
+      }
+    ],
+    "produces": [
+      "application/json"
+    ],
+    "tags": [
+      {
+        "name": "User Authentication",
+        "description": ""
+      },
+      {
+        "name": "User Apis",
+        "description": ""
+      },
+      {
+        "name": "Friend",
+        "description": ""
+      },
+      {
+        "name": "Recipe",
+        "description": ""
+      },
+      {
+        "name": "Recipe Comments",
+        "description": ""
+      },
+      {
+        "name": "Circles",
+        "description": ""
+      },
+      {
+        "name": "Chat",
+        "description": ""
+      }
+    ],
+    "components": {
+      "parameters": {
+        "offsetParam": {
+          "in": "query",
+          "name": "pageNumber",
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1
+          },
+          "required": true,
+          "description": "current page number (offset)"
+        },
+        "limitParam": {
+          "in": "query",
+          "name": "pageSize",
+          "schema": {
+            "type": "integer",
+            "minimum": 10,
+            "default": 10
+          },
+          "required": true,
+          "description": "number of users to return per page (limit)"
+        }
+      },
+      "securitySchemas": {
+        "BearerAuth": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "JWT"
+        },
+        "ApiKeyAuth": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "Authorization"
+        }
+      }
+    },
+    "paths": {
+      "/api/users/send-otp": {
+        "post": {
+          "tags": [
+            "User Authentication"
+          ],
+          "summary": "Send Otp",
+          "description": "Send otp to users",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "You should pass LoginText (Phone Number or email) send otp",
+              "required": true,
+              "schema": {
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "phoneNumber": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "example":{
+                    "data":{
+                        "loginText":"9586756273"
+                    }
+                }
+              }
+            }
+          ],
+          "responses": {
+            "422": {
+              "description": "Unprocessable Entity",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "boolean"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Cannot find loginText"
+                  }
+                }
+              }
+            },
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "phoneNumber": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                        "data": {
+                                  "message": "Otp sended"
+                              },
+                              "success": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/users/signin": {
+        "post": {
+          "tags": [
+            "User Authentication"
+          ],
+          "summary": "Login Through VerificationCode and LoginText",
+          "description": "Enter VerificationCode and LoginText for login ",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "You should pass VerificationCode and LoginText to Signup here",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":{
+                    "loginText":"8200608406",
+                    "verificationCode":"1234"
+                }
+              }
+              
+            }
+          ],
+          "responses": {
+            "422": {
+                "description": "Unprocessable Entity",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "example": {
+                        "success": false,
+                        "message": "Cannot Found User"
+                    }
+                  }
+                }
+              },
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZmIwOWZiZjRjNmIzNzBjZDQwNmM4NzMiLCJpYXQiOjE2MDU3MDIzNjEsImV4cCI6MTYwODI5NDM2MX0.c2Xk5MX9k4BsvNirtFeiYDWQjwIeJaZpIWXuFvnEL9c",
+                    "message": "Login Successfull",
+                    "user": {
+                        "profilePic": "https://phably.s3.amazonaws.com/PNGPOydjkKe2uspCFG9l.jpg",
+                        "verificationCode": null,
+                        "userBlocked": false,
+                        "favoriteRecipes": [
+                            "5fae1de5f961c4154419da86",
+                            "5fae7162b5468e3ba4a63497"
+                        ],
+                        "friends": [],
+                        "circles": [
+                            "5fb0cadead612b2b24de285c",
+                            "5fb0ccff679fdb3f485d621b",
+                            "5fb240d62153a6133816d37a",
+                            "5fb241a42153a6133816d37b",
+                            "5fb261cb2b6da11aac65ec2c",
+                            "5fb2627bf7fa3c1688076fe9"
+                        ],
+                        "_id": "5fb09fbf4c6b370cd406c873",
+                        "name": "Manish",
+                        "loginText": "8200608406",
+                        "createdAt": "2020-11-12T13:34:12.451Z",
+                        "updatedAt": "2020-11-18T12:26:01.104Z",
+                        "__v": 4,
+                        "email": "mustafagondalwala322@gmail.com",
+                        "phoneNumber": "8200608406"
+                    },
+                    "success": true
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "bad request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": 
+                  {
+                    "success": false,
+                    "message": "Invalid Verification Code"
+                }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/users/": {
+        "post": {
+          "tags": [
+            "User Apis"
+          ],
+          "summary": "Get the Current Details of User",
+          "description": "",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                }
+              }
+              
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "user": {
+                          "profilePic": "https://phably.s3.amazonaws.com/PNGPOydjkKe2uspCFG9l.jpg",
+                          "verificationCode": null,
+                          "userBlocked": false,
+                          "favoriteRecipes": [
+                              "5fae1de5f961c4154419da86",
+                              "5fae7162b5468e3ba4a63497"
+                          ],
+                          "friends": [],
+                          "circles": [
+                              "5fb0cadead612b2b24de285c",
+                              "5fb0ccff679fdb3f485d621b",
+                              "5fb240d62153a6133816d37a",
+                              "5fb241a42153a6133816d37b",
+                              "5fb261cb2b6da11aac65ec2c",
+                              "5fb2627bf7fa3c1688076fe9"
+                          ],
+                          "_id": "5fb09fbf4c6b370cd406c873",
+                          "name": "Manish",
+                          "loginText": "8200608406",
+                          "createdAt": "2020-11-12T13:34:12.451Z",
+                          "updatedAt": "2020-11-18T12:05:06.456Z",
+                          "__v": 4,
+                          "email": "mustafagondalwala322@gmail.com",
+                          "phoneNumber": "8200608406"
+                      }
+                  },
+                  "success": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/users/:userId": {
+        "get": {
+          "tags": [
+            "User Apis"
+          ],
+          "summary": "Get the Other Users Details",
+          "description": "",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                }
+              }
+              
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "user": {
+                          "profilePic": "https://phably.s3.amazonaws.com/PNGPOydjkKe2uspCFG9l.jpg",
+                          "verificationCode": null,
+                          "userBlocked": false,
+                          "favoriteRecipes": [
+                              "5fae1de5f961c4154419da86",
+                              "5fae7162b5468e3ba4a63497"
+                          ],
+                          "friends": [],
+                          "circles": [
+                              "5fb0cadead612b2b24de285c",
+                              "5fb0ccff679fdb3f485d621b",
+                              "5fb240d62153a6133816d37a",
+                              "5fb241a42153a6133816d37b",
+                              "5fb261cb2b6da11aac65ec2c",
+                              "5fb2627bf7fa3c1688076fe9"
+                          ],
+                          "_id": "5fb09fbf4c6b370cd406c873",
+                          "name": "Manish",
+                          "loginText": "8200608406",
+                          "createdAt": "2020-11-12T13:34:12.451Z",
+                          "updatedAt": "2020-11-18T12:05:06.456Z",
+                          "__v": 4,
+                          "email": "mustafagondalwala322@gmail.com",
+                          "phoneNumber": "8200608406"
+                      }
+                  },
+                  "success": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/users": {
+        "put": {
+          "tags": [
+            "User Apis"
+          ],
+          "summary": "update the profile details of a user",
+          "description": "updated name,email,phonenumber,status and profilepicture of user",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":{
+                  "name":"Nothing",
+                  "email":"nothing@gmail.com",
+                  "status":"Hi All",
+                  "profilePic":"file"
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "profilePic": "https://phably.s3.amazonaws.com/PNGPOydjkKe2uspCFG9l.jpg",
+                      "verificationCode": null,
+                      "userBlocked": false,
+                      "favoriteRecipes": [
+                          "5fae1de5f961c4154419da86",
+                          "5fae7162b5468e3ba4a63497"
+                      ],
+                      "friends": [],
+                      "circles": [
+                          "5fb0cadead612b2b24de285c",
+                          "5fb0ccff679fdb3f485d621b",
+                          "5fb240d62153a6133816d37a",
+                          "5fb241a42153a6133816d37b",
+                          "5fb261cb2b6da11aac65ec2c",
+                          "5fb2627bf7fa3c1688076fe9"
+                      ],
+                      "_id": "5fb09fbf4c6b370cd406c873",
+                      "name": "Manish",
+                      "loginText": "8200608406",
+                      "createdAt": "2020-11-12T13:34:12.451Z",
+                      "updatedAt": "2020-11-18T12:45:52.710Z",
+                      "__v": 5,
+                      "email": "nothing@gmail.com"
+                  },
+                  "success": true
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Validation Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/users/friend/search-by-phoneNumber": {
+        "post": {
+          "tags": [
+            "Friend"
+          ],
+          "summary": "Get the Friend Through Contacts from mobile",
+          "description": "Enter Phone Numbers in body. ",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "You should pass VerificationCode and LoginText to Signup here",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":{
+                    "phoneNumbers":[
+                      "9586756273",
+                      "7265001478",
+                      "7016496353"
+                  ]
+                }
+              }
+              
+            }
+          ],
+          "responses": {
+            "422": {
+                "description": "Unprocessable Entity",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "example": {
+                      "success": false,
+                      "message": "Validation Error: Phone Numbers (Array) is Required"
+                    }
+                  }
+                }
+              },
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "getAllFetchFriends": [
+                          {
+                              "profilePic": "https://phably.s3.amazonaws.com/PNGPOydjkKe2uspCFG9l.jpg",
+                              "_id": "5fad39d41a1d3536a4ed8960",
+                              "name": "Mustafa"
+                          },
+                          {
+                              "profilePic": "https://phably.s3.amazonaws.com/PNGPOydjkKe2uspCFG9l.jpg",
+                              "_id": "5fb0a221436489120839bdbe",
+                              "name": "Ankit"
+                          },
+                          {
+                              "profilePic": "https://phably.s3.amazonaws.com/PNGPOydjkKe2uspCFG9l.jpg",
+                              "_id": "5fb0bc9f436489120839bdbf",
+                              "name": "Ankull"
+                          }
+                      ]
+                  },
+                  "success": true
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "bad request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": 
+                  {
+                    "success": false,
+                    "message": "Invalid Verification Code"
+                }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/users/friend": {
+        "get": {
+          "tags": [
+            "Friend"
+          ],
+          "summary": "Get the Friend ",
+          
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "params",
+              "name": "params",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":"/api/users/friend"
+              }
+              
+            }
+          ],
+          "responses": {
+            "422": {
+                "description": "Unprocessable Entity",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "example": {
+                      "success": false,
+                      "message": "Validation Error: Phone Numbers (Array) is Required"
+                    }
+                  }
+                }
+              },
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "getAllFetchFriends": {
+                          "friends": [
+                              {
+                                  "profilePic": "https://phably.s3.amazonaws.com/PNGPOydjkKe2uspCFG9l.jpg",
+                                  "_id": "5fad39d41a1d3536a4ed8960",
+                                  "name": "Mustafa"
+                              },
+                              {
+                                  "profilePic": "https://phably.s3.amazonaws.com/PNGPOydjkKe2uspCFG9l.jpg",
+                                  "_id": "5fb0a221436489120839bdbe",
+                                  "name": "Ankit"
+                              },
+                              {
+                                  "profilePic": "https://phably.s3.amazonaws.com/PNGPOydjkKe2uspCFG9l.jpg",
+                                  "_id": "5fb0bc9f436489120839bdbf",
+                                  "name": "Ankull"
+                              }
+                          ],
+                          "_id": "5fb09fbf4c6b370cd406c873"
+                      }
+                  },
+                  "success": true
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "bad request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": 
+                  {
+                    "success": false,
+                    "message": "Invalid Verification Code"
+                }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/users/circle/": {
+        "post": {
+          "tags": [
+            "Circles"
+          ],
+          "summary": "Create new custom groups with friends",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "You should pass friendIds,circleName,circleDescription",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":{
+                  "circleName": "First",
+                  "circleDescription":"Frist circleDescription",
+                  "friendIds":"5fb0a221436489120839bdbe,5fb0bc9f436489120839bdbf"
+                }
+              }
+              
+            }
+          ],
+          "responses": {
+            "422": {
+                "description": "Unprocessable Entity",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "example": {
+                      "success": false,
+                      "message": "Invalid Parameter: friendIds"
+                    }
+                  }
+                }
+              },
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "newCircle": {
+                          "circleImage": "https://phably.s3.amazonaws.com/KruGCMMYqoDlhnZO9ime.png",
+                          "circleDescription": "Frist circleDescription",
+                          "circleMembersId": [
+                              "5fb0a221436489120839bdbe",
+                              "5fb0bc9f436489120839bdbf",
+                              "5fb09fbf4c6b370cd406c873"
+                          ],
+                          "_id": "5fb558d94923f3027808bbf0",
+                          "circleName": " First,",
+                          "adminId": "5fb09fbf4c6b370cd406c873",
+                          "createdAt": "2020-11-18T17:24:42.255Z",
+                          "updatedAt": "2020-11-18T17:24:42.255Z",
+                          "__v": 0
+                      },
+                      "message": "New Circle Created"
+                  },
+                  "success": true
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "bad request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": 
+                  {
+                    "success": false,
+                    "message": "Invalid Verification Code"
+                }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/users/circle": {
+        "get": {
+          "tags": [
+            "Circles"
+          ],
+          "summary": "Get all thecustom groups in which users",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "params",
+              "name": "params",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":"/api/users/circle"
+              }
+              
+            }
+          ],
+          "responses": {
+            "422": {
+                "description": "Unprocessable Entity",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "example": {
+                      "success": false,
+                      "message": "Invalid Parameter: friendIds"
+                    }
+                  }
+                }
+              },
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "userCircles": [
+                          {
+                              "circleImage": "https://phably.s3.amazonaws.com/XuX0M3RXLuDZD2IPPDOp.jpg",
+                              "circleDescription": "My First Group is Avaible here.",
+                              "_id": "5fb0cadead612b2b24de285c",
+                              "circleName": "First Circle,",
+                              "adminId": "5fad39d41a1d3536a4ed8960"
+                          },
+                          {
+                              "circleImage": "https://phably.s3.amazonaws.com/qoHee6jqW2ep5jHIDzTz.jpg",
+                              "circleDescription": "My First Group is Avaible here.",
+                              "_id": "5fb0ccff679fdb3f485d621b",
+                              "circleName": "First Circle,",
+                              "adminId": "5fad39d41a1d3536a4ed8960"
+                          },
+                          {
+                              "circleImage": "https://phably.s3.amazonaws.com/bkVjO7dzWqderPHDTyGF.jpg",
+                              "circleDescription": "All the Description",
+                              "_id": "5fb240d62153a6133816d37a",
+                              "circleName": "Secound Circle",
+                              "adminId": "5fad39d41a1d3536a4ed8960"
+                          },
+                          {
+                              "circleImage": "https://phably.s3.ap-south-1.amazonaws.com/fwg8SqVxHWQNnrc8xQFh.jpg",
+                              "circleDescription": "All the Description",
+                              "_id": "5fb241a42153a6133816d37b",
+                              "circleName": "Secound Circle",
+                              "adminId": "5fad39d41a1d3536a4ed8960"
+                          },
+                          {
+                              "circleImage": "https://phably.s3.amazonaws.com/LSkS99YGHnl7IT9YyVKw.jpg",
+                              "circleDescription": "All the Description",
+                              "_id": "5fb261cb2b6da11aac65ec2c",
+                              "circleName": "Last and Final Group of Season",
+                              "adminId": "5fad39d41a1d3536a4ed8960"
+                          },
+                          {
+                              "circleImage": "https://phably.s3.amazonaws.com/TIbkEpo36VkrOlUxCzTX.jpg",
+                              "circleDescription": "All the Description",
+                              "_id": "5fb2627bf7fa3c1688076fe9",
+                              "circleName": "Last and Final Group of Season 2",
+                              "adminId": "5fad39d41a1d3536a4ed8960"
+                          },
+                          {
+                              "circleImage": "https://phably.s3.amazonaws.com/KruGCMMYqoDlhnZO9ime.png",
+                              "circleDescription": "Frist circleDescription",
+                              "_id": "5fb558d94923f3027808bbf0",
+                              "circleName": " First,",
+                              "adminId": "5fb09fbf4c6b370cd406c873"
+                          }
+                      ]
+                  },
+                  "success": true
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "bad request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": 
+                  {
+                    "success": false,
+                    "message": "Invalid Verification Code"
+                }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe": {
+        "post": {
+          "tags": [
+            "Recipe"
+          ],
+          "summary": "Add Recipe to System",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":{
+                  "recipeName":"Chicken Butter",
+                  "serves":2,
+                  "cookTime":"00:15",
+                  "prepTime":"00:20",
+                  "recipeMedia":"files"
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "newRecipe": {
+                          "ingredients": [],
+                          "recipeStep": [],
+                          "_id": "5fb5196911e9331a8cbb91da",
+                          "recipeName": "Chicken Butter",
+                          "serves": 2,
+                          "cookTime": "00:15",
+                          "prepTime": "00:20",
+                          "recipeMedia": [
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91db",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/fR1TauTqBaPKvm8CBgH3.png",
+                                  "recipeMediaType": "png"
+                              },
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91dc",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/V6yClOrhMipkFYk4ByiL.jpg",
+                                  "recipeMediaType": "jpg"
+                              },
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91dd",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/KrpN1C0KxGS2NR1AUEFl.jpg",
+                                  "recipeMediaType": "jpg"
+                              }
+                          ],
+                          "createdByUser": "5fb09fbf4c6b370cd406c873",
+                          "createdAt": "2020-11-18T12:54:28.461Z",
+                          "updatedAt": "2020-11-18T12:54:28.461Z",
+                          "__v": 0
+                      }
+                  },
+                  "success": true 
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Validation Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/": {
+        "get": {
+          "tags": [
+            "Recipe"
+          ],
+          "summary": "Get Each Recipe of User from db",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "params",
+              "name": "params",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":"/api/recipe"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "AllReceipt": [
+                          {
+                              "ingredients": [
+                                  {
+                                      "_id": "5fb51b884287e344b42fc76a",
+                                      "ingredientName": "Chicken",
+                                      "ingredientQuality": 1,
+                                      "ingredientMeasure": "kg",
+                                      "createdAt": "2020-11-18T13:03:04.860Z",
+                                      "updatedAt": "2020-11-18T13:03:04.860Z",
+                                      "__v": 0
+                                  }
+                              ],
+                              "recipeStep": [
+                                  {
+                                      "_id": "5fb5209b972a8221985ec0cc",
+                                      "procedureTitle": "First Step All",
+                                      "procedureDetails": "Add Anything",
+                                      "createdByUser": "5fb09fbf4c6b370cd406c873",
+                                      "__v": 0
+                                  }
+                              ],
+                              "_id": "5fb5196911e9331a8cbb91da",
+                              "recipeName": "\"Chicken Butter\"",
+                              "serves": 3,
+                              "cookTime": "00:15",
+                              "prepTime": "\"00:20\"",
+                              "recipeMedia": [
+                                  {
+                                      "_id": "5fb5198411e9331a8cbb91db",
+                                      "recipeMediaUrl": "https://phably.s3.amazonaws.com/fR1TauTqBaPKvm8CBgH3.png",
+                                      "recipeMediaType": "png"
+                                  },
+                                  {
+                                      "_id": "5fb5198411e9331a8cbb91dc",
+                                      "recipeMediaUrl": "https://phably.s3.amazonaws.com/V6yClOrhMipkFYk4ByiL.jpg",
+                                      "recipeMediaType": "jpg"
+                                  },
+                                  {
+                                      "_id": "5fb5198411e9331a8cbb91dd",
+                                      "recipeMediaUrl": "https://phably.s3.amazonaws.com/KrpN1C0KxGS2NR1AUEFl.jpg",
+                                      "recipeMediaType": "jpg"
+                                  }
+                              ],
+                              "createdByUser": "5fb09fbf4c6b370cd406c873",
+                              "createdAt": "2020-11-18T12:54:28.461Z",
+                              "updatedAt": "2020-11-18T16:51:49.802Z",
+                              "__v": 6
+                          }
+                      ]
+                  },
+                  "success": true
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Validation Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/:recipeId/": {
+        "put": {
+          "tags": [
+            "Recipe"
+          ],
+          "summary": "Update Recipe to System",
+          "description":"Just Pass Recipe ID in params, and updated varibales in body",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":{
+                  "reciepName":"Chicken Butter 2",
+                  "serves":3,
+                  "cookTime":"00:15"
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "recipe": {
+                          "ingredients": [
+                              "5fb51b884287e344b42fc76a"
+                          ],
+                          "recipeStep": [
+                              "5fb5209b972a8221985ec0cc"
+                          ],
+                          "_id": "5fb5196911e9331a8cbb91da",
+                          "recipeName": "\"Chicken Butter\"",
+                          "serves": 3,
+                          "cookTime": "00:15",
+                          "prepTime": "\"00:20\"",
+                          "recipeMedia": [
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91db",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/fR1TauTqBaPKvm8CBgH3.png",
+                                  "recipeMediaType": "png"
+                              },
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91dc",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/V6yClOrhMipkFYk4ByiL.jpg",
+                                  "recipeMediaType": "jpg"
+                              },
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91dd",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/KrpN1C0KxGS2NR1AUEFl.jpg",
+                                  "recipeMediaType": "jpg"
+                              }
+                          ],
+                          "createdByUser": "5fb09fbf4c6b370cd406c873",
+                          "createdAt": "2020-11-18T12:54:28.461Z",
+                          "updatedAt": "2020-11-18T13:54:13.453Z",
+                          "__v": 1
+                      }
+                  },
+                  "success": true
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Validation Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/:recipeId": {
+        "get": {
+          "tags": [
+            "Recipe"
+          ],
+          "summary": "Get Individual Recipe",
+          "description":"Pass RecipeId in params",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "recipe": {
+                          "ingredients": [
+                              {
+                                  "_id": "5fb51b884287e344b42fc76a",
+                                  "ingredientName": "Chicken",
+                                  "ingredientQuality": 1,
+                                  "ingredientMeasure": "kg",
+                                  "createdAt": "2020-11-18T13:03:04.860Z",
+                                  "updatedAt": "2020-11-18T13:03:04.860Z",
+                                  "__v": 0
+                              }
+                          ],
+                          "recipeStep": [
+                              {
+                                  "_id": "5fb5209b972a8221985ec0cc",
+                                  "procedureTitle": "First Step",
+                                  "procedureDetails": "Add Anything",
+                                  "createdByUser": "5fb09fbf4c6b370cd406c873",
+                                  "__v": 0
+                              }
+                          ],
+                          "_id": "5fb5196911e9331a8cbb91da",
+                          "recipeName": "\"Chicken Butter\"",
+                          "serves": 2,
+                          "cookTime": "\"00:15\"",
+                          "prepTime": "\"00:20\"",
+                          "recipeMedia": [
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91db",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/fR1TauTqBaPKvm8CBgH3.png",
+                                  "recipeMediaType": "png"
+                              },
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91dc",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/V6yClOrhMipkFYk4ByiL.jpg",
+                                  "recipeMediaType": "jpg"
+                              },
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91dd",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/KrpN1C0KxGS2NR1AUEFl.jpg",
+                                  "recipeMediaType": "jpg"
+                              }
+                          ],
+                          "createdByUser": "5fb09fbf4c6b370cd406c873",
+                          "createdAt": "2020-11-18T12:54:28.461Z",
+                          "updatedAt": "2020-11-18T13:24:43.822Z",
+                          "__v": 1
+                      }
+                  },
+                  "success": true
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Error: Validation Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/recipe-media/:recipeId": {
+        "get": {
+          "tags": [
+            "Recipe"
+          ],
+          "summary": "Get All the Recipe Media from Recipe",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "params",
+              "name": "params",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":
+                  "/api/recipe/recipe-media/5fb5196911e9331a8cbb91da"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "recipeMedia": {
+                          "_id": "5fb5196911e9331a8cbb91da",
+                          "recipeMedia": [
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91db",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/fR1TauTqBaPKvm8CBgH3.png",
+                                  "recipeMediaType": "png"
+                              },
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91dc",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/V6yClOrhMipkFYk4ByiL.jpg",
+                                  "recipeMediaType": "jpg"
+                              },
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91dd",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/KrpN1C0KxGS2NR1AUEFl.jpg",
+                                  "recipeMediaType": "jpg"
+                              }
+                          ]
+                      }
+                  },
+                  "success": true
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Validation Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/recipe-media/:recipeId/": {
+        "put": {
+          "tags": [
+            "Recipe"
+          ],
+          "summary": "Add Recipe Media to Recipe",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":
+                  {
+                    "recipeMedia":"files"
+                  }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "updateRecipeImages": {
+                          "_id": "5fb5196911e9331a8cbb91da",
+                          "recipeMedia": [
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91db",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/fR1TauTqBaPKvm8CBgH3.png",
+                                  "recipeMediaType": "png"
+                              },
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91dc",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/V6yClOrhMipkFYk4ByiL.jpg",
+                                  "recipeMediaType": "jpg"
+                              },
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91dd",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/KrpN1C0KxGS2NR1AUEFl.jpg",
+                                  "recipeMediaType": "jpg"
+                              },
+                              {
+                                  "_id": "5fb54ad9c5d2592d40a51852",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/zqJdmWx7pbyTGZfgXfIU.jpg",
+                                  "recipeMediaType": "jpg"
+                              }
+                          ]
+                      },
+                      "message": "Recipe Media updated successfully"
+                  },
+                  "success": true
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Validation Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/recipe-media/:recipeId/:recipeMediaId": {
+        "delete": {
+          "tags": [
+            "Recipe"
+          ],
+          "summary": "Delete Recipe Media from Recipe",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "params",
+              "name": "params",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":"/api/recipe/recipe-media/5fb5196911e9331a8cbb91da/5fb5198411e9331a8cbb91db"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "updateRecipeImages": {
+                          "_id": "5fb5196911e9331a8cbb91da",
+                          "recipeMedia": [
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91db",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/fR1TauTqBaPKvm8CBgH3.png",
+                                  "recipeMediaType": "png"
+                              },
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91dc",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/V6yClOrhMipkFYk4ByiL.jpg",
+                                  "recipeMediaType": "jpg"
+                              },
+                              {
+                                  "_id": "5fb5198411e9331a8cbb91dd",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/KrpN1C0KxGS2NR1AUEFl.jpg",
+                                  "recipeMediaType": "jpg"
+                              },
+                              {
+                                  "_id": "5fb54ad9c5d2592d40a51852",
+                                  "recipeMediaUrl": "https://phably.s3.amazonaws.com/zqJdmWx7pbyTGZfgXfIU.jpg",
+                                  "recipeMediaType": "jpg"
+                              }
+                          ]
+                      },
+                      "message": "Recipe Media updated successfully"
+                  },
+                  "success": true
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Validation Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/ingredients/:recipeId": {
+        "post": {
+          "tags": [
+            "Recipe"
+          ],
+          "summary": "Add Ingredients to Recipe",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":{
+                  "ingredientName":"Chicken",
+                  "ingredientQuality":1,
+                  "ingredientMeasure":"kg"
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                      "data": {
+                        "getAllIngredientRecipes": {
+                            "ingredients": [
+                                {
+                                    "_id": "5fb51b884287e344b42fc76a",
+                                    "ingredientName": "Chicken",
+                                    "ingredientQuality": 1,
+                                    "ingredientMeasure": "kg",
+                                    "createdAt": "2020-11-18T13:03:04.860Z",
+                                    "updatedAt": "2020-11-18T13:03:04.860Z",
+                                    "__v": 0
+                                }
+                            ],
+                            "_id": "5fb5196911e9331a8cbb91da"
+                        }
+                    },
+                    "success": true  
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Invalid Parameters:ingredientName,ingredientQuality,ingredientMeasure"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/ingredients/:recipeId/": {
+        "put": {
+          "tags": [
+            "Recipe"
+          ],
+          "summary": "Update Ingredients to Recipe",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":{
+                  "ingredientId":"5fb51b884287e344b42fc76a",
+                  "ingredientName": "Chicken",
+                  "ingredientQuality": 1,
+                  "ingredientMeasure": "kg"
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "getAllIngredient": {
+                          "ingredients": [
+                              {
+                                  "_id": "5fb51b884287e344b42fc76a",
+                                  "ingredientName": "Chicken",
+                                  "ingredientQuality": 1,
+                                  "ingredientMeasure": "kg",
+                                  "createdAt": "2020-11-18T13:03:04.860Z",
+                                  "updatedAt": "2020-11-18T13:03:04.860Z",
+                                  "__v": 0
+                              },
+                              {
+                                  "_id": "5fb54e187173b6058ca0eec4",
+                                  "ingredientName": "Chicken",
+                                  "ingredientQuality": 1,
+                                  "ingredientMeasure": "kg",
+                                  "createdAt": "2020-11-18T16:38:48.827Z",
+                                  "updatedAt": "2020-11-18T16:38:48.827Z",
+                                  "__v": 0
+                              }
+                          ],
+                          "_id": "5fb5196911e9331a8cbb91da"
+                      },
+                      "message": "Ingredient Updated"
+                  },
+                  "success": true
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Invalid Parameters:ingredientName,ingredientQuality,ingredientMeasure"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/ingredients/:recipeId/:ingredientId": {
+        "delete": {
+          "tags": [
+            "Recipe"
+          ],
+          "summary": "Delete Ingredients from Recipe",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "params",
+              "name": "params",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":"/api/recipe/ingredient/5fb5196911e9331a8cbb91da/5fb54e187173b6058ca0eec4"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "getAllIngredient": {
+                          "ingredients": [
+                              {
+                                  "_id": "5fb51b884287e344b42fc76a",
+                                  "ingredientName": "Chicken",
+                                  "ingredientQuality": 1,
+                                  "ingredientMeasure": "kg",
+                                  "createdAt": "2020-11-18T13:03:04.860Z",
+                                  "updatedAt": "2020-11-18T13:03:04.860Z",
+                                  "__v": 0
+                              }
+                          ],
+                          "_id": "5fb5196911e9331a8cbb91da"
+                      },
+                      "message": "Ingredient Deleted"
+                  },
+                  "success": true
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Invalid Parameters:ingredientName,ingredientQuality,ingredientMeasure"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/ingredients/:suggestion": {
+        "get": {
+          "tags": [
+            "Recipe"
+          ],
+          "summary": "Get Ingredients Suggestion",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "params",
+              "name": "params",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":"/api/recipe/ingredient/suggestion?q=S"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "suggestion": [
+                          "Salt"
+                      ]
+                  },
+                  "success": true
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Invalid Parameters:ingredientName,ingredientQuality,ingredientMeasure"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/step/:recipeId": {
+        "post": {
+          "tags": [
+            "Recipe"
+          ],
+          "summary": "Add Step to the Recipe",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":{
+                  "procedureTitle":"First Step",
+                  "procedureDetails":"Add Anything"
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "getAllSteps": {
+                          "recipeStep": [
+                              {
+                                  "_id": "5fb5209b972a8221985ec0cc",
+                                  "procedureTitle": "First Step",
+                                  "procedureDetails": "Add Anything",
+                                  "createdByUser": "5fb09fbf4c6b370cd406c873",
+                                  "__v": 0
+                              }
+                          ],
+                          "_id": "5fb5196911e9331a8cbb91da"
+                        }
+                    },
+                    "success": true
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Validation Error: procedureTitle, procedureDetails, recipeId"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/step/:recipeId/": {
+        "put": {
+          "tags": [
+            "Recipe"
+          ],
+          "summary": "Update Step to the Recipe",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":{
+                  "procedureId": "5fb5209b972a8221985ec0cc",
+                  "procedureTitle": "First Step All",
+                  "procedureDetails": "Add Anything"
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "getAllSteps": {
+                          "recipeStep": [
+                              {
+                                  "_id": "5fb5209b972a8221985ec0cc",
+                                  "procedureTitle": "First Step All",
+                                  "procedureDetails": "Add Anything",
+                                  "createdByUser": "5fb09fbf4c6b370cd406c873",
+                                  "__v": 0
+                              },
+                              {
+                                  "_id": "5fb5502f839b37480cb3490f",
+                                  "procedureTitle": "First Step",
+                                  "procedureDetails": "Add Anything",
+                                  "createdByUser": "5fb09fbf4c6b370cd406c873",
+                                  "__v": 0
+                              }
+                          ],
+                          "_id": "5fb5196911e9331a8cbb91da"
+                      }
+                  },
+                  "success": true
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Validation Error: procedureTitle, procedureDetails, recipeId"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/step/:recipeId/:stepId": {
+        "delete": {
+          "tags": [
+            "Recipe"
+          ],
+          "summary": "Delete Step from the Recipe",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "params",
+              "name": "params",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":"api/recipe/step/5fb5196911e9331a8cbb91da/5fb5502f839b37480cb3490f"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                      "data": {
+                        "getAllIngredient": {
+                            "recipeStep": [
+                                {
+                                    "_id": "5fb5209b972a8221985ec0cc",
+                                    "procedureTitle": "First Step All",
+                                    "procedureDetails": "Add Anything",
+                                    "createdByUser": "5fb09fbf4c6b370cd406c873",
+                                    "__v": 0
+                                }
+                            ],
+                            "_id": "5fb5196911e9331a8cbb91da"
+                        },
+                        "message": "RecipeStep Deleted"
+                    },
+                    "success": true
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Validation Error: procedureTitle, procedureDetails, recipeId"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/favorite": {
+        "post": {
+          "tags": [
+            "Recipe"
+          ],
+          "summary": "Add Favorite Recipe",
+          "description":"Pass RecipeId and status (true or false)",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":{
+                  "recipeId":"5fb5196911e9331a8cbb91da",
+                  "status":true
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "userFavorite": {
+                          "favoriteRecipes": [
+                              {
+                                  "_id": "5fb5196911e9331a8cbb91da",
+                                  "recipeName": "Chicken Butter",
+                                  "recipeMedia": [
+                                      {
+                                          "_id": "5fb5198411e9331a8cbb91db",
+                                          "recipeMediaUrl": "https://phably.s3.amazonaws.com/fR1TauTqBaPKvm8CBgH3.png",
+                                          "recipeMediaType": "png"
+                                      },
+                                      {
+                                          "_id": "5fb5198411e9331a8cbb91dc",
+                                          "recipeMediaUrl": "https://phably.s3.amazonaws.com/V6yClOrhMipkFYk4ByiL.jpg",
+                                          "recipeMediaType": "jpg"
+                                      },
+                                      {
+                                          "_id": "5fb5198411e9331a8cbb91dd",
+                                          "recipeMediaUrl": "https://phably.s3.amazonaws.com/KrpN1C0KxGS2NR1AUEFl.jpg",
+                                          "recipeMediaType": "jpg"
+                                      }
+                                  ]
+                              }
+                          ],
+                          "_id": "5fb09fbf4c6b370cd406c873"
+                      }
+                  },
+                  "success": true
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Validation Error: procedureTitle, procedureDetails, recipeId"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/comment/:recipeId": {
+        "post": {
+          "tags": [
+            "Recipe Comments"
+          ],
+          "summary": "Add Comments to Recipe",
+          "description":"Pass RecipeId in params and comment in body",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":{
+                  "comment":"First Recipe Comment"
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "message": "New Comment Added"
+                    },
+                    "success": true
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Error: Validation Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/comment/:recipeId?page=1": {
+        "get": {
+          "tags": [
+            "Recipe Comments"
+          ],
+          "summary": "Get Comments to Recipe",
+          "description":"Pass RecipeId in params and page",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":{
+                  "comment":"First Recipe Comment"
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "recipeComment": [
+                          {
+                              "_id": "5fb524bd73a74f21580c52da",
+                              "createdByUser": {
+                                  "_id": "5fb09fbf4c6b370cd406c873",
+                                  "name": "Manish"
+                              },
+                              "comment": "First Recipe Comment",
+                              "updatedAt": "2020-11-18T13:42:21.425Z"
+                          }
+                      ]
+                  },
+                  "success": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/comment/": {
+        "put": {
+          "tags": [
+            "Recipe Comments"
+          ],
+          "summary": "Update Comments to Recipe",
+          "description":"Pass CommentId and comment in body",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":{
+                  "commentId":"5fb524bd73a74f21580c52da",
+                  "comment":"This is Updated"
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "message": "Comment Updated"
+                    },
+                    "success": true
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "validation error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": false,
+                    "message": "Error: Validation Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/recipe/comment/:recipeId/": {
+        "delete": {
+          "tags": [
+            "Recipe Comments"
+          ],
+          "summary": "Delete Recipe Comments",
+          "description":"Pass CommentId in params",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                        "message": "Recipe Comment Deleted"
+                    },
+                    "success": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/chat/one-one": {
+        "post": {
+          "tags": [
+            "Chat"
+          ],
+          "summary": "Post one-one chat",
+          "description":"Pass senderId,reciverId,message in body",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":{
+                  "senderId":"5fb0a221436489120839bdbe",
+                  "receiverId":"5fb0bc9f436489120839bdbf",
+                  "type":"message",
+                  "message":"Hello"
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "message": "Message saved",
+                      "newMessage": {
+                          "message": "Hello",
+                          "_id": "5fb55b718ac4264b049688cd",
+                          "senderId": "5fb0a221436489120839bdbe",
+                          "receiverId": "5fb0bc9f436489120839bdbf",
+                          "createdAt": "2020-11-18T17:35:45.950Z",
+                          "updatedAt": "2020-11-18T17:35:45.950Z",
+                          "__v": 0
+                      }
+                  },
+                  "success": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/chat/one-one/:receiverId/:page": {
+        "get": {
+          "tags": [
+            "Chat"
+          ],
+          "summary": "get  one-one chat messages",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":"/api/chat/one-one/5fb0bc9f436489120839bdbf/1"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "allMessages": [
+                          {
+                              "message": "Hello",
+                              "_id": "5fb55b718ac4264b049688cd",
+                              "senderId": "5fb0a221436489120839bdbe",
+                              "receiverId": "5fb0bc9f436489120839bdbf",
+                              "createdAt": "2020-11-18T17:35:45.950Z",
+                              "updatedAt": "2020-11-18T17:35:45.950Z",
+                              "__v": 0
+                          },
+                          {
+                              "message": "Looks good.",
+                              "_id": "5fb276e951482b1b0c1c7a03",
+                              "senderId": "5fb09fbf4c6b370cd406c873",
+                              "receiverId": "5fad39d41a1d3536a4ed8960",
+                              "createdAt": "2020-11-16T12:56:09.514Z",
+                              "updatedAt": "2020-11-16T12:56:09.514Z",
+                              "__v": 0
+                          },
+                          {
+                              "message": "Good Evening my friend",
+                              "_id": "5fb2768351482b1b0c1c79ff",
+                              "senderId": "5fb09fbf4c6b370cd406c873",
+                              "receiverId": "5fad39d41a1d3536a4ed8960",
+                              "createdAt": "2020-11-16T12:54:27.178Z",
+                              "updatedAt": "2020-11-16T12:54:27.178Z",
+                              "__v": 0
+                          }
+                      ]
+                  },
+                  "success": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/chat/group": {
+        "post": {
+          "tags": [
+            "Chat"
+          ],
+          "summary": "Post circle message chat",
+          "description":"Pass circleId,message in body",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":{
+                  "circleId":"5fb0cadead612b2b24de285c",
+                  "message":"Hello Work"
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "newgroupMessage": {
+                          "message": "Hello Work",
+                          "_id": "5fb55d1fe7e03a4b883593e3",
+                          "senderId": "5fb09fbf4c6b370cd406c873",
+                          "circleId": "5fb0cadead612b2b24de285c",
+                          "createdAt": "2020-11-18T17:42:55.813Z",
+                          "updatedAt": "2020-11-18T17:42:55.813Z",
+                          "__v": 0
+                      },
+                      "message": "New Group message created."
+                  },
+                  "success": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/chat/group/:circleId/:page": {
+        "get": {
+          "tags": [
+            "Chat"
+          ],
+          "summary": "All circle messages ",
+          "description":"Pass circleId, in params",
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "required": true,
+          "parameters": [
+            {
+              "in": "params",
+              "name": "params",
+              "description": "",
+              "required": true,
+              "schema": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                },
+                "example":"/api/chat/group/5fb0cadead612b2b24de285c/1"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "success response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "loginOTP": {
+                        "type": "integer"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "example": {
+                    "data": {
+                      "allMessages": [
+                          {
+                              "message": "Hello Work",
+                              "_id": "5fb55d1fe7e03a4b883593e3",
+                              "senderId": {
+                                  "profilePic": "https://phably.s3.amazonaws.com/PNGPOydjkKe2uspCFG9l.jpg",
+                                  "_id": "5fb09fbf4c6b370cd406c873",
+                                  "name": "Manish"
+                              },
+                              "circleId": "5fb0cadead612b2b24de285c",
+                              "createdAt": "2020-11-18T17:42:55.813Z",
+                              "updatedAt": "2020-11-18T17:42:55.813Z",
+                              "__v": 0
+                          },
+                          {
+                              "message": "Hello Work",
+                              "_id": "5fb55d1ce7e03a4b883593e2",
+                              "senderId": {
+                                  "profilePic": "https://phably.s3.amazonaws.com/PNGPOydjkKe2uspCFG9l.jpg",
+                                  "_id": "5fb09fbf4c6b370cd406c873",
+                                  "name": "Manish"
+                              },
+                              "circleId": "5fb0cadead612b2b24de285c",
+                              "createdAt": "2020-11-18T17:42:52.663Z",
+                              "updatedAt": "2020-11-18T17:42:52.663Z",
+                              "__v": 0
+                          }
+                      ]
+                  },
+                  "success": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+    }
+    
+  }
