@@ -6,14 +6,31 @@ const userSchema = new Schema(
   {
     name: {
       type: String,
+      default:""
     },
     profilePic:{
+      type: String,
+      default:""
+    },
+    email:{
+      type: String,
+      default:""
+    },
+    phoneNumber:{
       type: String,
       default:""
     },
     loginText: {
       type: String,
       unique: [true, "Login Text is already exists."],
+    },
+    loginToken: {
+      type: String,
+      default:""
+    },
+    fcmToken: {
+      type: String,
+      default:""
     },
     phoneNumber: {
       type: String,
@@ -24,6 +41,15 @@ const userSchema = new Schema(
     verificationCode: {
       type: String,
       default:null
+    },
+    whichRecipe:{
+      type: String,
+      default:"",
+    },
+    gender:{
+      type: String,
+      enum: ["male","female",""],
+      default:"",
     },
     userBlocked: {
       type: Boolean,
@@ -39,6 +65,12 @@ const userSchema = new Schema(
       {
         type:Schema.Types.ObjectId,
         ref:'User'
+      }
+    ],
+    recipes:[
+      {
+        type:Schema.Types.ObjectId,
+        ref:'Recipe'
       }
     ],
     circles:[

@@ -1,7 +1,12 @@
+const { update } = require("../models/user");
 const {
     createCircle,
-    fetchCircles
+    fetchCircles,
+    updateCircle,
+    deleteCircle
 } = require("../services/circle/circleService")
+
+
 module.exports = {    
     createNewCircle:async(req,res) => {
         try {
@@ -19,4 +24,20 @@ module.exports = {
             ReE(res, error, 422, "circle Controller >>> fetch Circles method");
           }
     },
+    updateCircle: async(req, res) => {
+      try {
+        ReS(res,await updateCircle(req),200)
+      } catch (error) {
+          console.log(error)
+        ReE(res, error, 422, "circle Controller >>> updateCircle method");
+      }
+    },
+    deleteCircle:async (req, res) => {
+      try {
+        ReS(res,await deleteCircle(req),200)
+      } catch (error) {
+          console.log(error)
+        ReE(res, error, 422, "circle Controller >>> deleteCircle method");
+      }
+    }
 }

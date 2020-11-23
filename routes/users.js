@@ -17,7 +17,7 @@ const checkToken = require('../middleware/checkToken');
 router.use('/friend',friendRoute)
 router.use('/circle',circleRoute)
 
-router.post("/signup", create);
+// router.post("/signup", create);
 router.post("/signin", login);
 router.post("/send-otp", sendOtp);
 router.put("",checkToken,userProfileUpdate);

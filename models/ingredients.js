@@ -15,6 +15,10 @@ const ingredientSchema = new Schema(
         type: String,
         required:[true,"Ingredient Measure is required"]
     },
+    ingredientString:{
+      type: String,
+      required:[true,"Ingredient String is required"]
+    }
   },
   { timestamps: true },
   { minimize: false }

@@ -6,7 +6,7 @@ const {
 const User = require("../models/user")
 const {
   loginSendOtp
-} = require("../services/utils/otp");
+} = require("../services/utils/otpService");
 
 
 module.exports = {
@@ -30,8 +30,7 @@ module.exports = {
     },
     sendOtp: async(req,res) => {
       try{
-        const {loginText} = req.body;
-        ReS(res, await loginSendOtp(loginText), 200);
+        ReS(res, await loginSendOtp(req), 200);
       }catch(error){
         ReE(res, error, 400, "User Controller >>> send otp");
       }

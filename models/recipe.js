@@ -7,7 +7,7 @@ const recipeSchema = new Schema(
       type:Schema.Types.ObjectId,ref:'User',
       required:[true,"User _id is required"]
     },
-    recipeMedia:[
+    recipeMedia:
       {
         recipeMediaType:{
           type:String,
@@ -16,7 +16,7 @@ const recipeSchema = new Schema(
           type:String,
         }
       }
-    ],
+    ,
     recipeName: {
       type: String,
       require:[true,"Recipe Name is required"]
@@ -24,6 +24,11 @@ const recipeSchema = new Schema(
     serves:{
         type: Number,
         required:[true,"Serves is required"]
+    },
+    servesType:{
+      type: Number,
+      enum: [1,2],
+      required:[true,"Serves Type is required"]
     },
     cookTime:{
       type:String,
@@ -43,10 +48,18 @@ const recipeSchema = new Schema(
         type:Schema.Types.ObjectId,ref:'RecipeStep'
       },
     ],
+    recipeComment:[{
+      type:Schema.Types.ObjectId,ref:'RecipeComment'
+    }],
+    recipeBlocked:{
+      type:Boolean,
+      default:false
+    }
   },
   { timestamps: true },
   { minimize: false }
 );
+
 
 
 

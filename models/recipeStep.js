@@ -2,23 +2,29 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const recipeStepScheme = new Schema({
-  // stepMedia:{
-  //   type:String,
-  // },
-  // stepMediaType:{
-  //   type: String, enum: ["image","videa","gif"]
-  // },
+  recipeStepMedia:
+    {
+      recipeStepMediaType:{
+        type:String,
+      },
+      recipeStepMediaUrl:{
+        type:String,
+      }
+   },
   createdByUser:{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  procedureTitle:{
+  stepName:{
     type:String,
-    required:[true,"Procedure Title is Required"],
+    required:[true,"Step Name is Required"],
   },
-  procedureDetails:{
+  stepIntructions:{
     type:String,
-    required:[true,"Procedure Detials is Required"],
+    required:[true,"Step Intructions is Required"],
+  },
+  stepPersonalTouch:{
+    type:String,
   },
 });
 

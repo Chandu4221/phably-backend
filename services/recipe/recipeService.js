@@ -1,68 +1,106 @@
 const User = require('../../models/user')
-const mongoose = require("mongoose");
-const jwt = require("jsonwebtoken");
 
 const RecipeStep = require("../../models/recipeStep")
 const Recipe = require("../../models/recipe")
 const Ingredient = require("../../models/ingredients");
-const RecipeComment = require("../../models/recipeComment")
-const { render, param } = require('../../app');
+const escapeStringRegexp = require('escape-string-regexp');
+
 module.exports = (function () {
     /**
-     * @params request, response
-     * @For creating a new user
+     * @params body, decoded,files
+     * @For creating a new recipe
      */
     this.createRecipe = async ({ body,decoded,files }) => {
-        const {recipeName,serves,cookTime,prepTime} = body;
-        const {recipeMedia} = files
-        const userId = decoded._id
+      //get the varibles
+      const {recipeName,serves,servesType,cookTime,prepTime} = body;
+      const {recipeMedia} = files
 
-        let newRecipe = new Recipe({
+      //check if all varibles are available
+      if(!recipeName || !serves || !servesType || !cookTime || !prepTime){
+        throw new Error("Recipe validation failed: recipeName: Recipe Name is required, serves: Serves is required, servesType: Serves Type is required, cookTime: Cook Time is required, prepTime: Prepration Time is required")
+      }
+
+      const userId = decoded._id
+
+      //create new recipe instance
+      let newRecipe = new Recipe({
           recipeName,
           serves,
+          servesType,
           cookTime,
           prepTime,
-          recipeMedia:[],
-          createdByUser:decoded._id
+          createdByUser:userId
         })
 
+        //if any media is available than upload to S3
         if(recipeMedia){
-          if(recipeMedia.length > 1){
-              let response = await ImageMultipleUpdate(recipeMedia)
-              response.forEach(element => {
-                newRecipe.recipeMedia.push({
-                  recipeMediaUrl:element[0],
-                  recipeMediaType:element[1],
-                })
-              });
-          }else{
+          
             let response = await ImageUpload(recipeMedia)
-            newRecipe.recipeMedia.push(
+            newRecipe.recipeMedia = 
               {
                 recipeMediaUrl:response.Location,
                 recipeMediaType:getExtensions(recipeMedia.originalFilename)[1],
               }
-            )
-          }
         }
 
+        //save the instance to db
         await newRecipe.save();
+
+
+        // add recipeId to User instance
+        const user = await User.findById(userId);
+        user.recipes.push(newRecipe._id);
+        user.save();
+
         return {data:{newRecipe}}
     };
 
 
-    this.getAllRecipes = async({decoded,query}) => {
-      const {page} = query
-      var limit = parseInt(10);
-      var skip = (parseInt(page)-1) * parseInt(limit);
-      let AllReceipt = await Recipe.find({createdByUser:decoded._id}).populate('recipeStep').populate('ingredients').skip(skip).limit(limit)
-      return {data:{AllReceipt}}
+    this.getRecipeSuggestions = async({decoded,query}) => {
+      // get varibles
+      const {q} = query
+      const $regex = escapeStringRegexp(q);
+      console.log($regex)
+      let result = await Recipe.find({recipeName:{$regex}}).select("recipeName recipeMedia")
+      return {data:{result}}
     }
 
-    this.updateRecipe = async ({params,body}) => {
 
-      const {recipeId} = params;
-      const {recipeName,serves,cookTime,prepTime} = body;
+    /**
+     * @params decoded,query
+     * @For get all the current recipes of users
+     */
+    this.getAllRecipes = async({decoded,query}) => {
+      const {page} = query
+      const userId = decoded._id
+      console.log(query)
+      var limit =  parseInt(query.limit) || 10;
+      console.log(parseInt(query.limit))
+      var skip = (parseInt(page)-1) * parseInt(limit);
+      let userRecipes = await User.findById(userId).select('recipes').populate({path:'recipes',select:'recipeName recipeMedia cookTime prepTime', options: {limit: limit, skip: skip}})
+      return {data:{userRecipes}}
+    }
+
+    /**
+     * @params body, decoded,files
+     * @For update the receipt
+     */
+    this.updateRecipe = async ({decoded,body}) => {
+      //get all the varibales
+      const userId = decoded._id
+      const {recipeName,serves,cookTime,prepTime,recipeId} = body;
+
+      // check if recipeId is present
+      if(!recipeId || !verifyObjectId(recipeId)){
+        throw new Error("Cannot found recipe id in body");
+      }
+      // check if user owns the recipe id
+      const user = await User.findById(userId).select('recipes')
+
+      // check whether user owns the recipe
+      if(!user.recipes.includes(recipeId)){
+        throw new Error("User does not own recipe id: " + userId)
+      }
 
       const recipe = await Recipe.findById(recipeId)
       if(!recipe){
@@ -83,14 +121,14 @@ module.exports = (function () {
       }
       
       await recipe.save();
-      const getUpdatedRecipe = await Recipe.findById(recipeId)
+      const getUpdatedRecipe = await Recipe.findById(recipeId).populate('ingredients').populate('recipeStep')
       return {data:{"recipe":getUpdatedRecipe}}
     }
-    this.createIngredient = async ({ params,body}) => {
-       //get all the params for insert of ingredient
-        const {ingredientName,ingredientQuality,ingredientMeasure,ingredientId} = body;
-        const {recipeId} = params;
 
+    this.createIngredient = async ({body,decoded}) => {
+       //get all the params for insert of ingredient
+        const {ingredientName,ingredientQuality,ingredientMeasure,recipeId} = body;
+        const userId = decoded._id
         //check if params is valid
         if(!ingredientName || !ingredientQuality || !ingredientMeasure){
           throw new Error("Invalid Parameters:ingredientName,ingredientQuality,ingredientMeasure")
@@ -100,6 +138,11 @@ module.exports = (function () {
         if(!recipeId){
           throw new Error('Invalid recipeId')
         }
+        
+        const user = await User.findById(userId).select('recipes')
+        if(!user.recipes.includes(recipeId)){
+          throw new Error("Recipe Dont belongs to user")
+        }
 
         //check if recipe is valid
         const recipe = await Recipe.findById(recipeId).select('ingredients')
@@ -107,9 +150,11 @@ module.exports = (function () {
           throw new Error("Invalid Recipe Id")
         }
 
+        let ingredientString =  ingredientName+" "+ingredientQuality+" "+ingredientMeasure
+
         //insert new ingredient
         const newIngredient = await Ingredient.create({
-          ingredientName,ingredientQuality,ingredientMeasure
+          ingredientName,ingredientQuality,ingredientMeasure,ingredientString
         })
 
         recipe.ingredients.push(newIngredient._id)
@@ -119,13 +164,77 @@ module.exports = (function () {
         return {data:{getAllIngredientRecipes}}
     }
 
-    this.createProcedure = async ({params,body,decoded}) => {
-      const {procedureTitle,procedureDetails} = body
+    this.updateIngredient = async ({decoded,body}) => {
       const userId = decoded._id
-      const {recipeId} = params
+      const {ingredientId,ingredientName,ingredientQuality,ingredientMeasure,recipeId} = body
+      if(!ingredientId){
+        throw new Error("Validation Error: ingredientId,ingredientName,ingredientQuality,ingredientMeasure required")
+      }
 
-      if(!procedureDetails || !procedureTitle || !userId || !recipeId) {
-        throw new Error('Validation Error: procedureTitle, procedureDetails, recipeId')
+      const user = await User.findById(userId).select('recipes')
+      if(!user.recipes.includes(recipeId)){
+        throw new Error("Recipe dont belongs to user")
+      }
+      const updateIngredient = await Ingredient.findById(ingredientId)
+      if(!updateIngredient){
+        throw new Errror("Cannot Found the Ingredient")
+      }
+      if(ingredientName)
+        updateIngredient.ingredientName = ingredientName
+      if(ingredientQuality)
+        updateIngredient.ingredientQuality = ingredientQuality
+      if(ingredientMeasure)
+        updateIngredient.ingredientMeasure = ingredientMeasure
+      
+      updateIngredient.ingredientString =  ingredientName+" "+ingredientQuality+" "+ingredientMeasure
+      await updateIngredient.save()
+
+
+      const getAllIngredient = await Recipe.findById(recipeId).select('ingredients').populate('ingredients')
+      return {data:{getAllIngredient,"message":"Ingredient Updated"}}
+    }
+    this.deleteIngredient = async({params}) => {
+      //get the varibles
+      const {recipeId,ingredientId} = params
+
+      if(!recipeId || !ingredientId){
+        throw new Error("Cannot Found recipeId or ingredientId")
+      }
+
+      //get the recipe
+      const recipe = await Recipe.findById(recipeId)
+      if(!recipe){
+        throw new Error("Cannot Find recipe")
+      }
+
+      if(!recipe.ingredients.includes(ingredientId)){
+        throw new Error("Cannot Find Ingredient in recipe")
+      }
+
+      //remove ingredient from recipe
+      recipe.ingredients.pop(ingredientId)
+      await recipe.save();
+
+      //delete the ingerient
+      const deleteTheIngredient = await Ingredient.findById(ingredientId).remove()
+      if(deleteTheIngredient.deletedCount != 1){
+        throw new Error("Error Occur while deleting ingredient")
+      }
+
+      const getAllIngredient = await Recipe.findById(recipeId).select('ingredients').populate('ingredients')
+      return {data:{getAllIngredient,"message":"Ingredient Deleted"}}
+    }
+
+    /**
+     * Create the recipeStep for the recipe
+    */
+    this.createProcedure = async ({body,decoded,files}) => {
+      const {stepName,stepIntructions,stepPersonalTouch,recipeId} = body
+      
+      const userId = decoded._id
+
+      if(!stepName || !stepIntructions || !userId || !recipeId) {
+        throw new Error('Validation Error: stepName, stepIntructions, recipeId, userId')
       }
 
       //check if recipe exists
@@ -133,13 +242,31 @@ module.exports = (function () {
       if(!recipe) {
         throw new Error('Recipe not found')
       }
-
+      // check if user is exists
+      const userRecipes = await User.findById(userId).select('recipes')
+      if(!userRecipes.recipes.includes(recipeId)){
+        throw new Error('Recipe is not belong to user')
+      }
       //create new step instance
       const newStep = new RecipeStep({
-        procedureTitle,procedureDetails,createdByUser:userId,
+        stepName,stepIntructions,stepPersonalTouch,createdByUser:userId,
       })
-      await newStep.save();
 
+      // if any media is available than upload to S3
+      if(files != undefined){
+        const {recipeStepMedia} = files
+        if(recipeStepMedia){
+          let response = await ImageUpload(recipeStepMedia)
+          newStep.recipeStepMedia = 
+            {
+              recipeStepMediaUrl:response.Location,
+              recipeStepMediaType:getExtensions(recipeStepMedia.originalFilename)[1],
+            }
+        }
+      }
+      
+
+      await newStep.save();
       //store new step._id to recipe
       recipe.recipeStep.push(newStep._id)
       await recipe.save();
@@ -148,22 +275,59 @@ module.exports = (function () {
       const getAllSteps = await Recipe.findById(recipeId).select('recipeStep').populate('recipeStep')
       return {data:{getAllSteps}}
     }
-    this.updateProcedure = async({params,body}) => {
-      //get the varibles
-      const {procedureId,procedureTitle,procedureDetails} = body
+
+    /** Get all the recipe steps from recipe */
+    this.getAllRecipeSteps = async({params}) => {
       const {recipeId} = params
-      if(!procedureId || !procedureTitle || !procedureDetails || !recipeId){
-        throw new Error('Invalid parameters, procedureId,procedureTitle,procedureDetails,recipeId require')
+      if(!recipeId){
+        throw new Error("Cannot Found recipeId")
+      }
+      const recipeSteps = await Recipe.findById(recipeId).select('recipeStep').populate('recipeStep')
+      return {data:{recipeSteps}}
+    }
+
+    
+    /** update the recipe Step given */
+    this.updateProcedure = async({decoded,body,files}) => {
+      //get the varibles
+      const {stepName,stepIntructions,stepPersonalTouch,recipeId,recipeStepId} = body
+      const {recipeStepMedia} = files
+      const userId = decoded._id
+
+      if(!stepName || !stepIntructions || !userId || !recipeId || !recipeStepId) {
+        throw new Error('Validation Error: stepName, stepIntructions, recipeId, userId, recipeStepId')
+      }
+
+      // check if user is exists
+      const userRecipes = await User.findById(userId).select('recipes')
+      if(!userRecipes.recipes.includes(recipeId)){
+        throw new Error('Recipe is not belong to user')
       }
 
       //update the procedure or step
-      const procedure = await RecipeStep.findById(procedureId)
-      procedure.procedureTitle = procedureTitle
-      procedure.procedureDetails = procedureDetails
-      procedure.save()
+      const procedure = await RecipeStep.findById(recipeStepId)
+      if(stepName){
+        procedure.stepName = stepName
+      }
+      if(stepIntructions){
+        procedure.stepIntructions = stepIntructions
+      }
+      if(stepPersonalTouch){
+        procedure.stepPersonalTouch = stepPersonalTouch
+      }
 
+      //if any media is available than upload to S3
+      if(recipeStepMedia){
+        let response = await ImageUpload(recipeStepMedia)
+        procedure.recipeStepMedia = {
+            recipeStepMediaUrl:response.Location,
+            recipeStepMediaType:getExtensions(recipeStepMedia.originalFilename)[1],
+          }
+      }
+      //update the recipewith new data
+      procedure.save()
       const getAllSteps = await Recipe.findById(recipeId).select('recipeStep').populate('recipeStep')
-      return {data:{getAllSteps}}
+      return {data:{getAllSteps,"message":"Recipe Step updated successfully"}}
     }
     
     this.deleteProcedure = async({params}) => {
@@ -211,53 +375,7 @@ module.exports = (function () {
 
         return {data:{recipe}}
     }
-    this.updateIngredient = async ({params,body}) => {
-      const {recipeId} = params
-      const {ingredientId,ingredientName,ingredientQuality,ingredientMeasure} = body
-      if(!ingredientId || !ingredientName || !ingredientQuality || !ingredientMeasure){
-        throw new Error("Validation Error: ingredientId,ingredientName,ingredientQuality,ingredientMeasure required")
-      }
-
-      const updateIngredient = await Ingredient.findById(ingredientId)
-      updateIngredient.ingredientName = ingredientName
-      updateIngredient.ingredientQuality = ingredientQuality
-      updateIngredient.ingredientMeasure = ingredientMeasure
-      updateIngredient.save()
-
-      const getAllIngredient = await Recipe.findById(recipeId).select('ingredients').populate('ingredients')
-      return {data:{getAllIngredient,"message":"Ingredient Updated"}}
-    }
-    this.deleteIngredient = async({params}) => {
-      //get the varibles
-      const {recipeId,ingredientId} = params
-
-      if(!recipeId || !ingredientId){
-        throw new Error("Cannot Found recipeId or ingredientId")
-      }
-
-      //get the recipe
-      const recipe = await Recipe.findById(recipeId)
-      if(!recipe){
-        throw new Error("Cannot Find recipe")
-      }
-
-      if(!recipe.ingredients.includes(ingredientId)){
-        throw new Error("Cannot Find Ingredient in recipe")
-      }
-
-      //remove ingredient from recipe
-      recipe.ingredients.pop(ingredientId)
-      await recipe.save();
-
-      //delete the ingerient
-      const deleteTheIngredient = await Ingredient.findById(ingredientId).remove()
-      if(deleteTheIngredient.deletedCount != 1){
-        throw new Error("Error Occur while deleting ingredient")
-      }
-
-      const getAllIngredient = await Recipe.findById(recipeId).select('ingredients').populate('ingredients')
-      return {data:{getAllIngredient,"message":"Ingredient Deleted"}}
-    }
+    
 
     this.deleteRecipeImage = async({params}) => {
       //get all the varibles

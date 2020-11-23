@@ -9,10 +9,23 @@ module.exports = (function () {
       const {recipeId} = params
       const {page} = query
 
-      var limit = parseInt(process.env.RECIPE_COMMENT_PAGE);
+      
+      var limit = parseInt(query.limit) || parseInt(process.env.PAGE_COUNT || 10);
       var skip = (parseInt(page)-1) * parseInt(limit);
 
-      const recipeComment = await RecipeComment.find({recipeId}).select("createdByUser comment updatedAt").populate("createdByUser",'name').sort("-updatedAt").skip(skip).limit(limit)
+      const recipeComment = await Recipe.findById(recipeId).select("recipeComment").populate({ 
+        path: 'recipeComment',
+        select:"comment rating createdAt updatedAt",
+        options: {
+          limit: limit,
+          skip: skip
+        },
+        populate: [{
+         path: 'createdByUser',
+         model: 'User',
+         select: 'name profilePic'
+        }] 
+     })
       return {data:{recipeComment}}
     }
     this.deleteRecipeComments = async ({params}) => {
@@ -29,10 +42,40 @@ module.exports = (function () {
       else
         throw new Error("Error occurred while deleting recipe comment")
     }
+    this.addCommentLike = async ({body,decoded}) => {
+      // get the varibles
+      const {commentId,status} = body
+      const userId = decoded._id
+
+      if(!commentId || !status)
+        throw new Error("Comment Id and status must be provided")
+
+      // check if comment is available
+      const comment = await RecipeComment.findById(commentId)
+      if(!comment){
+        throw new Error("Comment not found")
+      }
+      if(status == "true"){
+        await comment.updateOne({ '$addToSet': {'commentLike':userId} })
+        comment.totalCommentLike = comment.commentLike.length
+      }else{
+        
+        comment.totalCommentLike = comment.commentLike.pull(userId).length
+      }
+
+      await comment.save()
+      // update the comment
+      const totalCommentLike = await RecipeComment.aggregate
+        ([
+        { "$match": { "_id": new mongoose.Types.ObjectId(commentId) } },
+        {$project: {totalLikes: {$size: '$commentLike'}}}
+      ])
+      return {data:{totalCommentLike,"message":"Comment Like Updated"}}
+    }
 
     this.updateRecipeComments = async ({body,decoded}) => {
       try{
-        const {comment,commentId} = body
+        const {comment,commentId,rating} = body
         const userId = decoded._id
 
         //check if data avaible in 
@@ -40,15 +83,19 @@ module.exports = (function () {
            throw new Error("Validation Error",400)
         }
 
-
         //check if recipe comment Exists
         let recipeComment = await RecipeComment.findById({_id: commentId});
         if(!recipeComment){
           throw new Error("Cannot Found Recipe Comment")
         }
 
-        recipeComment.comment = comment
-        recipeComment.save();
+        if(comment){
+          recipeComment.comment = comment
+        }
+        if(rating){
+          recipeComment.rating = rating
+        }
+        await recipeComment.save();
 
         // get all comment by the createby 
         // const allRecipeComments = await RecipeComment.find({recipeId}).sort("-updatedAt").limit(20);
@@ -60,15 +107,14 @@ module.exports = (function () {
 
       return {data:body}
     } 
-
-    this.createRecipeComment = async ({params,body,decoded}) => {
+    this.createRecipeComment = async ({body,decoded}) => {
       try{
-        const {recipeId} = params
-        const {comment} = body
+        const {comment,recipeId,rating} = body
         const userId = decoded._id
+
         //check if data avaible in 
-        if(!recipeId || !comment || !userId){
-           throw new Error("Validation Error",400)
+        if(!recipeId || !comment || !userId || !rating){
+           throw new Error("Validation Error, recipeId,rating, userId,comment is required",400)
         }
 
         //check if recipe Exists
@@ -80,16 +126,18 @@ module.exports = (function () {
         const newRecipeComment = new RecipeComment({
           createdByUser:userId,
           comment,
-          recipeId
+          recipeId,
+          rating
         })
 
         await newRecipeComment.save()
+        recipe.recipeComment.push(newRecipeComment._id)
+        recipe.save()
         
         return {data:{message:"New Comment Added"}}
       }catch(error){
         TE(error);
       }
     }
-    
     return this;
   })();

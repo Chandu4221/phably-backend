@@ -13,7 +13,6 @@ class MongoManager {
    * @returns mongoose connect object
    */
   connect() {
-    // mongoose.createConnection(this.getMongoUrl(), { poolSize: 15 });
     return mongoose
       .connect(this.getMongoUrl(), this.opts)
       .then(() => {

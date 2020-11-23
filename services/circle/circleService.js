@@ -97,5 +97,124 @@ module.exports = (function () {
 
         return {data:{newCircle,"message":"New Circle Created"}}
     }
+
+     /**
+     * @params body, decoded
+     * @For update circle 
+     */
+    this.updateCircle = async ({body,decoded,files}) => {
+
+        //get circleName, and circleDescription from body.
+        const {circleName,circleDescription,circleId,friendIds} = body;
+        //get the circleImage from files
+        const {circleImage} = files
+        const adminId = decoded._id;
+
+        if(!circleId || !adminId){
+            throw new Error("Invalid Parameter: circleId")
+        }
+        
+        //check if user admin is avaible
+        const user = await User.findById(adminId)
+        if(!user)
+        {
+            throw new Error('Cannot Found User')
+        }
+
+        // get the circle Id
+        const circle  = await Circle.findById(circleId)
+        
+        if(!circle)
+        {
+            throw new Error('Cannot Find Circle with id')
+        }
+
+        if(circle.adminId.toString() !== adminId.toString()){
+            throw new Error('User is not admin group')
+        }
+
+        if(friendIds){
+            //fetch string of firendIds to ObjectIds
+            const friendIds = body.friendIds.split(",").map(eachId => mongoose.Types.ObjectId(eachId))
+            circle.friendIds = friendIds
+        }
+
+        if(circleName){
+            circle.circleName = circleName
+        }
+        if(circleDescription){
+            circle.circleDescription = circleDescription
+        }
+        if(circleImage){
+            const awsData = await ImageUpload(circleImage)
+            circle.circleImage = awsData.Location
+        }
+
+
+
+
+        //create new circle in system
+        // const newCircle = new Circle({
+        //     circleName,
+        //     circleMembersId:friendIds,
+        //     adminId,
+        //     circleDescription
+        // })
+        // newCircle.circleMembersId.push(adminId)
+
+        //if image is avaible than upload to aws and save to instanceof Circle
+        
+
+
+        //save the circle instance to mongodb
+        await circle.save();
+
+
+        //add circle id in admin collection
+        // if(user.circles.length == 0){
+        //     //if circle is empty than push
+        //     await user.circles.push(newCircle._id)
+        // }else{
+        //     //if circle is avaible than add to set
+        //     await user.updateOne({$addToSet:{'circles':newCircle._id}})
+        // }
+
+        //add the user that created the group
+        // await user.circles.push(adminId)
+        // await user.save();
+
+        //update all the firend ids, with the circle id
+        // console.log(await User.find({_id:friendIds}).updateMany({$addToSet:{'circles':newCircle._id}}))
+
+        return {data:{circle,"message":"Circle Updated"}}
+    }
+
+    this.deleteCircle = async ({params,decoded}) => {
+        // get the varibles 
+        const {circleId} = params;
+        const adminId = decoded._id;
+        // get the circle Id
+        const circle  = await Circle.findById(circleId)
+        
+        if(!circle)
+        {
+            throw new Error('Cannot Find Circle with id')
+        }
+        
+        if(circle.adminId.toString() !== adminId.toString()){
+            throw new Error('User is not admin group')
+        }
+
+        circle.circleMembersId.forEach(async userId => {
+            let circleMember = await User.findByIdAndUpdate({'_id':userId},{ $pull: { "circles": circle._id }})
+        })
+
+        let circleDelete = await circle.delete();
+        if(circleDelete == null){
+            throw new Error("Circle Delete failed")
+        }
+        return {data:{"message":"Circle Delete successfull"}}
+    }
+
     return this;
 })();

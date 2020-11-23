@@ -44,8 +44,6 @@ module.exports = (function () {
       }
     };
 
-
-
     /**
      * @params request, response
      * @For login a user
@@ -85,17 +83,36 @@ module.exports = (function () {
      */
     this.profileUpdate = async({body,decoded,files}) => {
         //get all data for process
-        const {name,email,phoneNumber,} = body;
+        const {name,email,phoneNumber,whichRecipe,fcmToken,gender} = body;
         const {profilePic} = files
         const userId = decoded._id
         if(!name)
         {
           throw new Error("Validation Error")
         }
-        const user = await User.findById({_id:userId})
-        user.email = email
-        user.phoneNumber = phoneNumber
+        const user = await User.findById(userId)
+        if(email){
+          user.email = email
+        }
+        if(gender){
+          user.gender = gender
+        }
+        if(name){
+          user.name = name
+        }
         
+        if(phoneNumber){
+          user.phoneNumber = phoneNumber
+        }
+
+        if(whichRecipe){
+          user.whichRecipe = whichRecipe
+        }
+
+        if(fcmToken){
+          user.fcmToken = fcmToken
+        }
+
         if(profilePic){
           
           let profilePicLocation = await ImageUpload(profilePic)

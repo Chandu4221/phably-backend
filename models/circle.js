@@ -31,9 +31,4 @@ const circleSchema = new Schema(
   { minimize: false }
 );
 
-
-circleSchema.method.isAdmin = (userId) => {
-  return userId.toString() === this.adminId.toString()
-}
-
 module.exports = mongoose.model("Circle", circleSchema)

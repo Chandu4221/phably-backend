@@ -1,10 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const { createNewProcedure,updateProcedure,deleteProcedure } = require("../controller/receipeController");
+const { createNewProcedure,updateProcedure,deleteProcedure,getAllProcedures } = require("../controller/receipeController");
 const checkToken = require("../middleware/checkToken")
 
-router.post("/:recipeId",checkToken,createNewProcedure)
-router.put("/:recipeId",checkToken,updateProcedure)
+router.get("/:recipeId",checkToken,getAllProcedures)
+router.post("",checkToken,createNewProcedure)
+router.put("",checkToken,updateProcedure)
 router.delete("/:recipeId/:stepId",checkToken,deleteProcedure)
 
 

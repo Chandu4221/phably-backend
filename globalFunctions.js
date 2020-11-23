@@ -1,6 +1,8 @@
 const fs = require("fs")
 const AWS = require('aws-sdk')
 const path = require('path');
+const { verify } = require("crypto");
+const ObjectID = require('mongodb').ObjectID;
 
 
 const avaiblesFileTypes = ['jpeg','jpg','gif','mp4','png']
@@ -18,6 +20,12 @@ validateEmail = function(email){
 }
 
 
+verifyObjectId = (Id) => {
+  if(ObjectID.isValid(Id))
+    return true
+  else
+    return false
+}
 
 generateRandomString = function (length = 20) {
   var result           = '';
@@ -66,7 +74,7 @@ ReE = function (res, err, code, log) {
     send_data = { ...send_data, ...err }; //merge the objects
     return res.json(send_data);
   }
-
+  console.log(err)
   return res.json({ success: false, message: err },code);
 };
 

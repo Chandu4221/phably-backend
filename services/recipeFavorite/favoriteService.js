@@ -30,15 +30,49 @@ module.exports = (function () {
         await user.update({$pull:{'favoriteRecipes':recipeId}})
       }
       await user.save()
-      const userFavorite = await User.findById(userId).select('favoriteRecipes').populate('favoriteRecipes','recipeName recipeMedia')
+      const userFavorite = await User.findById(userId).select('favoriteRecipes').populate({
+        path: 'favoriteRecipes',
+        select:"recipeName recipeMedia",
+        populate: [{
+          path: 'createdByUser',
+          model: 'User',
+          select: 'name profilePic'
+         }],
+         options: {
+          limit: 10,
+        },
+      })
 
       return {data: {userFavorite}}
     }
     
 
-    this.getAll = async({decoded}) => {
+    this.getAll = async({decoded,query}) => {
       const userId = decoded._id
-      const userFavorite = await User.findById(userId).select('favoriteRecipes');
+      // const userFavorite = await User.findById(userId).select('favoriteRecipes').populate('favoriteRecipes','recipeName recipeMedia');
+      // delete userFavorite._id
+
+      const {page} = query
+
+      
+      var limit = parseInt(query.limit) || parseInt(process.env.PAGE_COUNT || 10);
+      var skip = (parseInt(page)-1) * parseInt(limit);
+
+      const userFavorite = await User.findById(userId).select('favoriteRecipes').populate({
+        path: 'favoriteRecipes',
+        select:"recipeName recipeMedia",
+        populate: [{
+          path: 'createdByUser',
+          model: 'User',
+          select: 'name profilePic'
+         }],
+         options: {
+          limit: limit,
+          skip: skip
+        },
+      })
+
+
       return {data: {userFavorite}}
     }
 

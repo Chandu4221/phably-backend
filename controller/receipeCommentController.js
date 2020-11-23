@@ -1,7 +1,8 @@
 const {
     createRecipeComment,
     getRecipeComments,
-    deleteRecipeComments
+    deleteRecipeComments,
+    addCommentLike
 } = require("../services/recipeComment/recipeCommentService")
 const Recipe = require("../models/recipe")
 const Ingredient = require("../models/ingredients")
@@ -13,6 +14,14 @@ module.exports = {
       } catch (error) {
           console.log(error)
         ReE(res, error, 422, "Recipe Controller >>> create comment method");
+      }
+    },
+    addCommentLike: async(req, res) => {
+      try {
+        ReS(res,await addCommentLike(req),200)
+      } catch (error) {
+          console.log(error)
+        ReE(res, error, 422, "Recipe Controller >>> addCommentLike method");
       }
     },
     getComments:async(req,res) => {

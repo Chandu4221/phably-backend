@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const checkToken = require("../middleware/checkToken")
-const {addComment,getComments,updateComments,deleteComments} = require("../controller/receipeCommentController")
+const {addComment,getComments,updateComments,deleteComments,addCommentLike} = require("../controller/receipeCommentController")
 
-router.post("/:recipeId",checkToken,addComment)
 router.get("/:recipeId",checkToken,getComments)
+router.post("",checkToken,addComment)
 router.put("",checkToken,updateComments)
 router.delete("/:commentId",checkToken,deleteComments)
-
+router.post('/like',checkToken,addCommentLike)
 
 
 

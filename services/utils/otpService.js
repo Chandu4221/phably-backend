@@ -7,24 +7,30 @@ module.exports = (function () {
      * @params loginText
      * @For send Login Otp
      */
-    this.loginSendOtp = async (loginText) => {
+    this.loginSendOtp = async ({body}) => {
+        const {loginText,type} = body
+        console.log(loginText,type)
         const verificationCode = generateVerificationCode();
 
         if(!loginText){
             throw new Error("Cannot find loginText")
         }
 
-        let isExist = User.findOne({loginText});
-        if(isExist == "")
-            throw new Error("Cannot Found email or phone")
+        let isExist = await User.findOne({loginText});
+        console.log(isExist)
+        if(isExist == null){
+            //create new 
+            const user = await User.create({loginText})
+        }
+
         await User.updateOne({loginText},{verificationCode})
-        if(validateEmail(loginText)){
+        if(type == "mobile"){
             return {
                 data:{
                     "message": "Otp sended"
                 }
             }
-        }else if(validatePhone(loginText)){
+        }else if(type == "email"){
             return {
                 data:{
                     "message": "Otp sended"
