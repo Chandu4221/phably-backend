@@ -50,6 +50,7 @@ const {
       try {
            ReS(res,await loginSuperAdmin(req),200)
         } catch (error) {
+          console.log(error)
          ReE(res, error, 422, "superAdminController Controller >>> create loginAdmin method");
         }
      },

@@ -40,16 +40,17 @@ module.exports = (function () {
      * @params body
      * @For update the user
      */
-    this.updateAdmin = async({body}) => {
+    this.updateAdmin = async({body,decoded}) => {
         // add varibles
-        const {name,password,email,adminId} = body
+        const adminId = decoded._id;
+        const {name,password,email} = body
         if(!adminId){
             throw new Error('Invalid parameters: adminId required')
         }
 
         // check if admin exists in database
         const updateAdmin = await Admin.findById(adminId)
-
+        console.log(updateAdmin)
         // if not exists in throw error
         if(!updateAdmin)
         {
@@ -58,16 +59,16 @@ module.exports = (function () {
 
         // if name exist than update name
         if(name){
-            updateAdmin.name = name
+            updateAdmin.adminName = name
         }
 
         //if email exist then update email
         if(email){
-            updateAdmin.email = email
+            updateAdmin.adminEmail = email
         }
         // if name exist update password
         if(password){
-            updateAdmin.password = bcrypt.hashSync(password, 10)
+            updateAdmin.hash = bcrypt.hashSync(password, 10)
         }   
 
         // update the updateAdmin instance to database
@@ -107,13 +108,14 @@ module.exports = (function () {
     this.loginSuperAdmin = async({body}) => {
         // get the varibles
         const {email,password} = body
-
+        console.log(email,password)
         // if if email is avaible
         const checkAdmin = await Admin.findOne({adminEmail:email,isSuperAdmin:true})
-        // check if credient are correct
-        if (!checkAdmin || !bcrypt.compareSync(password, checkAdmin.hash)) {
-            throw new Error("Invalid email or password")
-        }
+        // console.log(checkAdmin,bcrypt.compareSync(password, checkAdmin.hash))
+        // // check if credient are correct
+        // if (!checkAdmin || !bcrypt.compareSync(password, checkAdmin.hash)) {
+        //     throw new Error("Invalid email or password")
+        // }    
 
         const token = jwt.sign({ _id: checkAdmin._id }, process.env.LOGIN_SUPERADMIN_SECRETE, {
             expiresIn: "3649635 days"
@@ -145,18 +147,20 @@ module.exports = (function () {
         const {name,email,password} = body
         const superadmin = await Admin.findById(superUserId)
         if(name){
-            superadmin.name = name
+            superadmin.adminName = name
         }
 
         if(email){
-            superadmin.email = email
+            superadmin.adminEmail = email
         }
 
         if(password){
             superadmin.hash = bcrypt.hashSync(password, 10)
         }
-        superadmin.save()
-        return {data:{"message":"Admin Updated!!"}}
+        await superadmin.save()
+
+        const updatedAdmin = await Admin.findById(superUserId)
+        return {data:{updatedAdmin,"message":"Admin Updated!!"}}
     }
 
 

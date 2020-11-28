@@ -7,7 +7,6 @@ router.post("",adminRecipeController.getRecipes)
 router.get("/:recipeId",adminRecipeController.getIndividualRecipe)
 router.post("",adminRecipeController.updateBlockStatus)
 
-
 router.use("/comment",commentRoutes)
 
 

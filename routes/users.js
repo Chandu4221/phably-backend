@@ -10,12 +10,14 @@ const {
     login,
     userProfileUpdate,
     userDetails,
-    otherUserDetails
+    otherUserDetails,
+    userSuggestion
   } = require("../controller/userController");
 const checkToken = require('../middleware/checkToken');
 
 router.use('/friend',friendRoute)
 router.use('/circle',circleRoute)
+router.get("/suggestion",checkToken,userSuggestion)
 
 // router.post("/signup", create);
 router.post("/signin", login);
@@ -23,7 +25,6 @@ router.post("/send-otp", sendOtp);
 router.put("",checkToken,userProfileUpdate);
 router.get("",checkToken,userDetails)
 router.get("/:userId",checkToken,otherUserDetails)
-
 
 
 

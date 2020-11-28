@@ -1,6 +1,7 @@
 const {
     createUser,
-    profileUpdate
+    profileUpdate,
+    userSuggestion
   } = require("../services/user/userService");
 
 const User = require("../models/user")
@@ -53,7 +54,13 @@ module.exports = {
       const {userId} = req.params
       const user = await User.findById(userId)
       return ReS(res,{data:{user}},200)
+    },
+    userSuggestion: async (req, res) => {
+      try{
+        ReS(res, await userSuggestion(req), 200);
+      }catch(error){
+        ReE(res, error, 400, "User Controller >>> userSuggestion");
+      }
     }
-    
   };
   

@@ -10,12 +10,12 @@ module.exports = (function () {
     this.loginAdmin = async({body}) =>{
         // get all the varibles
         const {email,password} = body
-        if(!email || !password){
-            throw new Error("Invalid email or password")
-        }
+        console.log(email,body)
 
         //get the admin by email
         const checkAdmin = await Admin.findOne({adminEmail:email})
+        console.log(body)
+        console.log(checkAdmin)
         if (!checkAdmin || !bcrypt.compareSync(password, checkAdmin.hash)) {
             throw new Error("Invalid email or password")
         }
@@ -61,7 +61,7 @@ module.exports = (function () {
         // get varibles
         const {userId,status} = body
 
-        if(!userId || status != ""){
+        if(!userId || status == ""){
             throw new Error("Invalid Parameter: userId,status required") 
         }
         // get the user
@@ -139,11 +139,11 @@ module.exports = (function () {
         }
 
         // get the recipe
-        const recipe = await Recipe.findById(recipeId)
+        const recipe = await Recipe.findById(recipeId).select('recipeComment').populate('recipeComment')
         if(!recipe){
             throw new Error("Cannot Found recipe")
         }
-
+        console.log(recipe)
         const limit = parseInt(query.limit) || parseInt(process.env.ADMIN_PAGE_COUNT)
         var skip = (parseInt(page)-1) * parseInt(limit);
 

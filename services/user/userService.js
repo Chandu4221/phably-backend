@@ -1,5 +1,7 @@
 const User = require('../../models/user')
 const jwt = require("jsonwebtoken");
+const escapeStringRegexp = require('escape-string-regexp');
+
 
 module.exports = (function () {
     /**
@@ -120,6 +122,22 @@ module.exports = (function () {
         }
         await user.save()
         return {data:user}
+    }
+
+
+    /**
+     * @params query
+     * @For suggestion of users
+     */
+    this.userSuggestion = async({query})=> {
+      const {q} = query;
+      if(!q){
+        throw new Error('Invalid Parameter: query required');
+      }
+      const $regex = escapeStringRegexp(q);
+      console.log($regex);
+      const users = await User.find({ loginText: $regex});
+      return users;
     }
 
     return this;

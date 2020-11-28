@@ -8,8 +8,6 @@ const recipeRoute = require("./admin/recipe")
 router.use('/user',adminToken,userRoute)
 router.use('/recipe',adminToken,recipeRoute)
 
-
-
 router.post("/login",adminController.loginAdmin)
 
 
